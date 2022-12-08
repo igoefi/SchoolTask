@@ -23,22 +23,39 @@ namespace School.Classes
     [Serializable()]
     internal class Student : Human, IComparable<Student> 
     {
-        private Dictionary<string, List<float>> _lessons = new Dictionary<string, List<float>>();
+        public Dictionary<string, List<float>> LessonsMark { get; private set; } = new Dictionary<string, List<float>>();
         internal Student(string name, string surname) : base(name, surname) { }
 
-        public void AddOrRateLesson(string lessonName, float mark)
+        public void AddLesson(string lessonName)
         {
-            if (_lessons[lessonName] == null)
-                _lessons.Add(lessonName, new List<float>());
-
-            float realMark = mark > 2 ? mark < 5 ? mark : 5 : 2;
-            _lessons[lessonName].Add(realMark);
+            if (LessonsMark[lessonName] == null)
+                LessonsMark.Add(lessonName, new List<float>());
         }
 
-        public void DeleteLesson(string name) => _lessons.Remove(name);
+        public void RateAndRerateLession(string lessonName, float mark, uint quarter)
+        {
+            if (LessonsMark[lessonName] == null)
+                return;
+
+            float realMark = mark > 2 ? mark < 5 ? mark : 5 : 2;
+            List<float> lessionRate = LessonsMark[lessonName];
+            if (quarter - 1 == lessionRate.Count)
+                lessionRate.Add(realMark);
+            else
+                lessionRate[(int)quarter - 1] = realMark;
+        }
+
+        public void DeleteLesson(string name) => LessonsMark.Remove(name);
         public List<float> GetMarks(string lesson)
         {
-            return _lessons[lesson];
+            if (LessonsMark[lesson] == null)
+                return null;
+            return LessonsMark[lesson];
+        }
+
+        public void SetMarks(Dictionary<string, List<float>> lessons)
+        {
+
         }
 
         public int CompareTo(Student other)
@@ -81,7 +98,16 @@ namespace School.Classes
             Name = name;
         }
 
-        public void AddStudent(Student student) => Students.Add(student);
+        public void AddStudent(Student student)
+        {
+            Students.Add(student);
+            if (Students.Count > 1)
+            {
+                var lessons = Students[0].LessonsMark.ToDictionary(entry => entry.Key, entry => entry.Value);
+                Students.Last();
+            }
+
+        }
         public void DeleteStudent(Student student) => Students.Remove(student);
 
         public void AddLesson(string nameLesson, Teacher teacher) =>
@@ -89,12 +115,12 @@ namespace School.Classes
         public void DeleteLession(string nameLesson) =>
             _lessonsTeachers.Remove(nameLesson);
 
-        public float GetAverageRating(string lessonName)
+        public float GetAverageRating(string lessonName, uint quarter)
         {
             float rating = 0;
             foreach(Student student in Students)
             {
-                rating += student.GetMarks(lessonName).Last();
+                rating += student.GetMarks(lessonName)[(int)quarter];
             }
             return rating / Students.Count;
         }

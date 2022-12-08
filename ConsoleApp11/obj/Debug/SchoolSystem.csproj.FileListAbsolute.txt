@@ -1,0 +1,8 @@
+D:\SchoolTask-main\ConsoleApp11\bin\Debug\ConsoleApp11.exe.config
+D:\SchoolTask-main\ConsoleApp11\bin\Debug\ConsoleApp11.exe
+D:\SchoolTask-main\ConsoleApp11\bin\Debug\ConsoleApp11.pdb
+D:\SchoolTask-main\ConsoleApp11\obj\Debug\SchoolSystem.csproj.AssemblyReference.cache
+D:\SchoolTask-main\ConsoleApp11\obj\Debug\SchoolSystem.csproj.SuggestedBindingRedirects.cache
+D:\SchoolTask-main\ConsoleApp11\obj\Debug\SchoolSystem.csproj.CoreCompileInputs.cache
+D:\SchoolTask-main\ConsoleApp11\obj\Debug\ConsoleApp11.exe
+D:\SchoolTask-main\ConsoleApp11\obj\Debug\ConsoleApp11.pdb

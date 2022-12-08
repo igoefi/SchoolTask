@@ -28,6 +28,12 @@ namespace School
             }
 
 
+            List<float> list = new List<float> {
+                0,
+                0,
+                0
+            };
+
           
             Console.WriteLine("Вывод всех учеников из всех классов");
             foreach(Class schClass in _arrays._classes)
@@ -66,12 +72,19 @@ namespace School
            _arrays.AddDeleteStudent(className, studentName, studentSurname, isAdd);
         }
 
-        private static void AddDeleteTeacher(string name, string surname, uint mainClassNum, bool isAdd)
+        private static void AddDeleteTeacher(bool isAdd)
         {
             Console.Clear();
             Console.WriteLine("Добавление учителя");
 
             Console.WriteLine("Напишите имя и фамилию учителя");
+            string name = Console.ReadLine();
+            string surname = Console.ReadLine();
+
+            Console.WriteLine("Напишите, к какому кабинету привязан учитель");
+            uint.TryParse(Console.ReadLine(), out uint cabinetNum);
+
+            _arrays.AddDeleteTeacher(name, surname, cabinetNum, isAdd);
         }
         #endregion
 
