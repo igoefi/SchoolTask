@@ -6,3 +6,11 @@ D:\SchoolTask-main\ConsoleApp11\obj\Debug\SchoolSystem.csproj.SuggestedBindingRe
 D:\SchoolTask-main\ConsoleApp11\obj\Debug\SchoolSystem.csproj.CoreCompileInputs.cache
 D:\SchoolTask-main\ConsoleApp11\obj\Debug\ConsoleApp11.exe
 D:\SchoolTask-main\ConsoleApp11\obj\Debug\ConsoleApp11.pdb
+C:\Users\igoefi\source\repos\ConsoleApp11\ConsoleApp11\bin\Debug\ConsoleApp11.exe.config
+C:\Users\igoefi\source\repos\ConsoleApp11\ConsoleApp11\bin\Debug\ConsoleApp11.exe
+C:\Users\igoefi\source\repos\ConsoleApp11\ConsoleApp11\bin\Debug\ConsoleApp11.pdb
+C:\Users\igoefi\source\repos\ConsoleApp11\ConsoleApp11\obj\Debug\SchoolSystem.csproj.AssemblyReference.cache
+C:\Users\igoefi\source\repos\ConsoleApp11\ConsoleApp11\obj\Debug\SchoolSystem.csproj.SuggestedBindingRedirects.cache
+C:\Users\igoefi\source\repos\ConsoleApp11\ConsoleApp11\obj\Debug\SchoolSystem.csproj.CoreCompileInputs.cache
+C:\Users\igoefi\source\repos\ConsoleApp11\ConsoleApp11\obj\Debug\ConsoleApp11.exe
+C:\Users\igoefi\source\repos\ConsoleApp11\ConsoleApp11\obj\Debug\ConsoleApp11.pdb

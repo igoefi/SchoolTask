@@ -28,24 +28,31 @@ namespace School.Classes
 
         public void AddLesson(string lessonName)
         {
-            if (LessonsMark[lessonName] == null)
+            LessonsMark.TryGetValue(lessonName, out List<float> marks);
+            if (marks == null)
                 LessonsMark.Add(lessonName, new List<float>());
         }
 
-        public void RateAndRerateLession(string lessonName, float mark, uint quarter)
-        {
-            if (LessonsMark[lessonName] == null)
-                return;
+        public void DeleteLesson(string name) => LessonsMark.Remove(name);
 
-            float realMark = mark > 2 ? mark < 5 ? mark : 5 : 2;
-            List<float> lessionRate = LessonsMark[lessonName];
-            if (quarter - 1 == lessionRate.Count)
-                lessionRate.Add(realMark);
-            else
-                lessionRate[(int)quarter - 1] = realMark;
+        #region GetSet
+        public List<float> GetMarksOfLession(string lessonName)
+        {
+            if (LessonsMark[lessonName] != null)
+                return LessonsMark[lessonName];
+            return null;
+
         }
 
-        public void DeleteLesson(string name) => LessonsMark.Remove(name);
+        public float GetAverangeMarkOfLession(string lessonName)
+        {
+            List<float> marks = LessonsMark[lessonName];
+            if (marks != null)
+                return marks.Sum() / marks.Count;
+
+            return 0;
+        }
+
         public List<float> GetMarks(string lesson)
         {
             if (LessonsMark[lesson] == null)
@@ -53,10 +60,9 @@ namespace School.Classes
             return LessonsMark[lesson];
         }
 
-        public void SetMarks(Dictionary<string, List<float>> lessons)
-        {
-
-        }
+        public void SetMarks(Dictionary<string, List<float>> lessons) =>
+            LessonsMark = lessons;
+        #endregion
 
         public int CompareTo(Student other)
         {
@@ -75,12 +81,24 @@ namespace School.Classes
 
         public void AddClassOrLesson(string lesson, Class lessonClass)
         {
-            if (lessonClass == null) return;
-
-            if (_lessons[lesson] == null)
+            _lessons.TryGetValue(lesson, out List<Class> list);
+            if (list == null)
                 _lessons.Add(lesson, new List<Class>());
 
-            _lessons[lesson].Add(lessonClass);
+            if (lessonClass != null)
+                _lessons[lesson].Add(lessonClass);
+        }
+        public void DeleteLesson(string lesson, Class schClass)
+        {
+            _lessons.TryGetValue(lesson, out List<Class> list);
+            if(list != null)
+                list.Remove(schClass);
+        }
+        public void DeleteLesson(string lesson)
+        {
+            _lessons.TryGetValue(lesson, out List<Class> list);
+            if (list != null)
+                _lessons.Remove(lesson);
         }
     }
     #endregion
@@ -104,25 +122,99 @@ namespace School.Classes
             if (Students.Count > 1)
             {
                 var lessons = Students[0].LessonsMark.ToDictionary(entry => entry.Key, entry => entry.Value);
-                Students.Last();
-            }
 
+                foreach (List<float> marks in lessons.Values)
+                    for(int i = 0; i < marks.Count; i++)
+                        marks[i] = 0;
+
+                student.SetMarks(lessons);
+            }
+            else
+            {
+                var lessons = new Dictionary<string, List<float>>();
+                foreach(string lessonName in _lessonsTeachers.Keys)
+                {
+                    lessons.Add(lessonName, new List<float>());
+                }
+                student.SetMarks(lessons);
+            }
         }
         public void DeleteStudent(Student student) => Students.Remove(student);
 
-        public void AddLesson(string nameLesson, Teacher teacher) =>
-            _lessonsTeachers.Add(nameLesson, teacher);
-        public void DeleteLession(string nameLesson) =>
-            _lessonsTeachers.Remove(nameLesson);
+        public void AddDeleteLesson(string nameLesson, Teacher teacher, bool isAdd)
+        {
+            _lessonsTeachers.TryGetValue(nameLesson, out Teacher checkTeacher);
+            if (checkTeacher == null)
+            {
+                if (!isAdd)
+                {
+                    Console.WriteLine($"Урок {nameLesson} не ведётся в классе {Name}");
+                    return;
+                }
 
-        public float GetAverageRating(string lessonName, uint quarter)
+                _lessonsTeachers.Add(nameLesson, teacher);
+                foreach (Student student in Students)
+                {
+                    student.AddLesson(nameLesson);
+                }
+            }
+            else
+            {
+                if (isAdd)
+                {
+                    Console.WriteLine($"Учитель по предмету {nameLesson} сменён с учителя {checkTeacher.Surname} {checkTeacher.Name} на учителя {teacher.Surname} {teacher.Name}");
+                    _lessonsTeachers[nameLesson] = teacher;
+                    return;
+                }
+                if(checkTeacher != teacher)
+                {
+                    Console.WriteLine($"Урок {nameLesson} в классе {Name} ведёт {checkTeacher.Surname} {checkTeacher.Name}, а не {teacher.Surname} {teacher.Name}");
+                    Console.WriteLine("По этой причине операция отменена");
+                    return;
+                }
+
+                _lessonsTeachers.Remove(nameLesson);
+                foreach (Student student in Students)
+                {
+                    student.DeleteLesson(nameLesson);
+                }
+            }
+        }
+
+
+        public float GetAverageRatingOsClass(string lessonName, uint quarter)
         {
             float rating = 0;
-            foreach(Student student in Students)
+            int studentCount = 0;
+            foreach (Student student in Students)
             {
-                rating += student.GetMarks(lessonName)[(int)quarter];
+                float mark = student.GetMarks(lessonName)[(int)quarter];
+                if (mark != 0)
+                {
+                    studentCount++;
+                    rating += student.GetMarks(lessonName)[(int)quarter];
+                }
             }
-            return rating / Students.Count;
+            return rating / studentCount;
+        }
+        public float GetAverageRatingOsClass(string lessonName)
+        {
+            float rating = 0;
+            int studentCount = 0;
+            foreach (Student student in Students)
+            {
+                float mark = student.GetAverangeMarkOfLession(lessonName);
+                if (mark != 0)
+                {
+                    studentCount++;
+                    rating += mark;
+                }
+            }
+            return rating / studentCount;
+        }
+        public List<string> GetLessons()
+        {
+            return _lessonsTeachers.Keys.ToList();
         }
 
         public int CompareTo(Class other)
