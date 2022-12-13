@@ -102,6 +102,7 @@ namespace School
             Console.WriteLine("5 - Вывести список всех классов");
             Console.WriteLine("6 - Вывести список всех учеников класса");
             Console.WriteLine("7 - Вывести список всех уроков класса");
+            Console.WriteLine("8 - Вывести информацию о классе");
             ConsoleKeyInfo key = Console.ReadKey();
             Console.Clear();
             switch (key.KeyChar)
@@ -126,6 +127,9 @@ namespace School
                     break;
                 case '7':
                     WriteLessons();
+                    break;          
+                case '8':
+                    FindAndWriteInfoAboutClass();
                     break;
                 default:
                     Console.Clear();
@@ -256,7 +260,26 @@ namespace School
         }
         #endregion
         #region WriteInformation
-        public static void FindAndWriteInfoAboutStudent()
+        private static void FindAndWriteInfoAboutClass()
+        {
+            string className = ClassInput();
+            Class schClass = _arrays.FindClass(className);
+            if (schClass == null)
+            {
+                Console.WriteLine("Данного класса не существует");
+                 return;
+            }
+
+            Console.Clear();
+            Console.WriteLine($"Класс {className}.");
+            Console.WriteLine("Студенты::");
+            for (int studentNum = 0; studentNum < schClass.Students.Count; studentNum++)
+            {
+                Console.WriteLine($"");
+            }
+        }
+
+        private static void FindAndWriteInfoAboutStudent()
         {
             string className = ClassInput();
             Class schClass = _arrays.FindClass(className);
