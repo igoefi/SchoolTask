@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace School.Classes
 {
     #region People
     [Serializable()]
-    internal abstract class Human 
+    internal abstract class Human
     {
         public string Name { get; private set; }
         public string Surname { get; private set; }
@@ -21,7 +19,7 @@ namespace School.Classes
     }
 
     [Serializable()]
-    internal class Student : Human, IComparable<Student> 
+    internal class Student : Human, IComparable<Student>
     {
         public Dictionary<string, List<float>> LessonsMark { get; private set; } = new Dictionary<string, List<float>>();
         internal Student(string name, string surname) : base(name, surname) { }
@@ -74,10 +72,34 @@ namespace School.Classes
     [Serializable()]
     internal class Teacher : Human
     {
-        private Dictionary<string, List<Class>> _lessons = new Dictionary<string, List<Class>>();
-        public uint _mainClassNum { get; private set; }
-        internal Teacher(string name, string surname, uint mainClassNum) : base(name, surname) 
-            => _mainClassNum= mainClassNum;
+        private readonly Dictionary<string, List<Class>> _lessons = new Dictionary<string, List<Class>>();
+        public uint MainClassNum { get; private set; }
+        internal Teacher(string name, string surname, uint mainClassNum) : base(name, surname)
+            => MainClassNum = mainClassNum;
+
+        public Dictionary<string, float> GetAllMarks()
+        {
+            if(_lessons.Count == 0) return null;
+
+            var marks = new Dictionary<string, float>();
+            foreach(string lesson in _lessons.Keys)
+            {
+                float rate = 0;
+                float classCount = 0;
+                
+                for(int classNum = 0; classNum < _lessons.Count; classNum++)
+                { 
+                    var classMarks = _lessons[lesson][classNum].GetAverageRatingOfClass(lesson);
+                    if (classMarks == null) continue;
+
+                    rate += classMarks.Sum() / classMarks.Count();
+                    classCount++;
+                }
+                marks.Add(lesson, rate/classCount);
+            }
+            return marks;
+        }
+
 
         public void AddClassOrLesson(string lesson, Class lessonClass)
         {
@@ -91,8 +113,7 @@ namespace School.Classes
         public void DeleteLesson(string lesson, Class schClass)
         {
             _lessons.TryGetValue(lesson, out List<Class> list);
-            if(list != null)
-                list.Remove(schClass);
+            list?.Remove(schClass);
         }
         public void DeleteLesson(string lesson)
         {
@@ -104,17 +125,15 @@ namespace School.Classes
     #endregion
 
     [Serializable()]
-    internal class Class : IComparable<Class> 
+    internal class Class : IComparable<Class>
     {
         public string Name { get; private set; }
 
         public List<Student> Students { get; private set; } = new List<Student>();
-        private Dictionary<string, Teacher> _lessonsTeachers = new Dictionary<string, Teacher>();
+        private readonly Dictionary<string, Teacher> _lessonsTeachers = new Dictionary<string, Teacher>();
 
-        internal Class(string name)
-        {
+        internal Class(string name) =>
             Name = name;
-        }
 
         public void AddStudent(Student student)
         {
@@ -124,7 +143,7 @@ namespace School.Classes
                 var lessons = Students[0].LessonsMark.ToDictionary(entry => entry.Key, entry => entry.Value);
 
                 foreach (List<float> marks in lessons.Values)
-                    for(int i = 0; i < marks.Count; i++)
+                    for (int i = 0; i < marks.Count; i++)
                         marks[i] = 0;
 
                 student.SetMarks(lessons);
@@ -132,7 +151,7 @@ namespace School.Classes
             else
             {
                 var lessons = new Dictionary<string, List<float>>();
-                foreach(string lessonName in _lessonsTeachers.Keys)
+                foreach (string lessonName in _lessonsTeachers.Keys)
                 {
                     lessons.Add(lessonName, new List<float>());
                 }
@@ -166,7 +185,7 @@ namespace School.Classes
                     _lessonsTeachers[nameLesson] = teacher;
                     return;
                 }
-                if(checkTeacher != teacher)
+                if (checkTeacher != teacher)
                 {
                     Console.WriteLine($"Урок {nameLesson} в классе {Name} ведёт {checkTeacher.Surname} {checkTeacher.Name}, а не {teacher.Surname} {teacher.Name}");
                     Console.WriteLine("По этой причине операция отменена");
@@ -181,37 +200,68 @@ namespace School.Classes
             }
         }
 
+        public Dictionary<string, List<float>> GetAverageRatingOfClass()
+        {
+            if (Students.Count == 0) return null;
+            if (_lessonsTeachers.Count == 0) return null;
 
-        public float GetAverageRatingOsClass(string lessonName, uint quarter)
-        {
-            float rating = 0;
-            int studentCount = 0;
-            foreach (Student student in Students)
+            var marks = new Dictionary<string, List<float>>();
+
+            foreach (string lessons in _lessonsTeachers.Keys)
             {
-                float mark = student.GetMarks(lessonName)[(int)quarter];
-                if (mark != 0)
+                var marksList = new List<float>();
+
+                for (int quarter = 0;
+                    quarter < Students.First().LessonsMark[lessons].Count(); quarter++)
                 {
-                    studentCount++;
-                    rating += student.GetMarks(lessonName)[(int)quarter];
+                    float rating = 0;
+                    int studentCount = 0;
+                    foreach (Student student in Students)
+                    {
+                        float mark = student.GetAverangeMarkOfLession(lessons);
+                        if (mark == 0) continue;
+
+                        studentCount++;
+                        rating += student.GetMarks(lessons)[quarter];
+                    }
+
+                    marksList.Add(rating / studentCount);
                 }
+
+                marks.Add(lessons, marksList);
             }
-            return rating / studentCount;
+
+            return marks;
         }
-        public float GetAverageRatingOsClass(string lessonName)
+
+        public List<float> GetAverageRatingOfClass(string lesson)
         {
-            float rating = 0;
-            int studentCount = 0;
-            foreach (Student student in Students)
+            if (Students.Count == 0) return null;
+            if (_lessonsTeachers.Count == 0) return null;
+            _lessonsTeachers.TryGetValue(lesson, out Teacher teacher);
+            if (teacher == null) return null;
+
+            var marksList = new List<float>();
+
+            for (int quarter = 0;
+                quarter < Students.First().LessonsMark[lesson].Count(); quarter++)
             {
-                float mark = student.GetAverangeMarkOfLession(lessonName);
-                if (mark != 0)
+                float rating = 0;
+                int studentCount = 0;
+                foreach (Student student in Students)
                 {
+                    float mark = student.GetAverangeMarkOfLession(lesson);
+                    if (mark == 0) continue;
+
                     studentCount++;
-                    rating += mark;
+                    rating += student.GetMarks(lesson)[quarter];
                 }
+
+                marksList.Add(rating / studentCount);
             }
-            return rating / studentCount;
+            return marksList;
         }
+
         public List<string> GetLessons()
         {
             return _lessonsTeachers.Keys.ToList();
