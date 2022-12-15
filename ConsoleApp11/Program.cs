@@ -1,6 +1,7 @@
 ﻿using School.Classes;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -102,6 +103,7 @@ namespace School
             Console.WriteLine("6 - Вывести список всех учеников класса");
             Console.WriteLine("7 - Вывести список всех уроков класса");
             Console.WriteLine("8 - Вывести информацию о классе");
+            Console.WriteLine("9 - Вывести рейтинг классов по средним оценкам");
             ConsoleKeyInfo key = Console.ReadKey();
             Console.Clear();
             switch (key.KeyChar)
@@ -129,6 +131,9 @@ namespace School
                     break;
                 case '8':
                     FindAndWriteInfoAboutClass();
+                    break;
+                case '9':
+                    WriteClassRating();
                     break;
                 default:
                     Console.Clear();
@@ -259,13 +264,30 @@ namespace School
         }
         #endregion
         #region WriteInformation
+        #region WriteRating
+        private static void WriteClassRating()
+        {
+            _arrays.GetClassRating(out List<Class> classes, out List<float> marks);
+            for(int classNum = 0; classNum < classes.Count; classNum++)
+            {
+                Console.WriteLine($"{classNum+1} класс {classes[classNum].Name}." + (marks[classNum] > 0 ?
+                    $" Средняя оценка - {marks[classNum]}" : " Оценка не выставлена") );
+            }
+        }
 
-        public static void FindAndWriteInfoAboutTeacher()
+        private static void WriteTeacherRating()
+        {
+
+        }
+        #endregion
+
+        #region WriteAboutPerson
+        private static void FindAndWriteInfoAboutTeacher()
         {
             NameInput("учителя", out string name, out string surname);
 
             Teacher teacher = _arrays.FindTeacher(name, surname);
-            if(teacher == null)
+            if (teacher == null)
             {
                 Console.WriteLine("Такого учителя не существует");
                 return;
@@ -273,23 +295,25 @@ namespace School
 
             Console.Clear();
             Console.WriteLine($"Учитель {teacher.Surname} {teacher.Name}, " +
-                $"привязана к кабинету {teacher.MainClassNum}");
+                $"привязан(а) к кабинету {teacher.MainClassNum}");
 
             var marks = teacher.GetAllMarks();
-            if(marks == null)
+            if (marks == null)
             {
                 Console.WriteLine("Этот учитель не ведёт уроки");
                 return;
             }
 
             Console.WriteLine("Оценки по урокам:");
-            foreach(string lesson in marks.Keys)
+            foreach (string lesson in marks.Keys)
             {
                 Console.WriteLine();
-                //НЕобходимо что-то сделать с "не число" при выводе. А я спать
-                Console.WriteLine($"Урок {lesson}. Средняя оценка - {marks[lesson]}");
+                marks.TryGetValue(lesson, out float mark);
+                if (mark == 0)
+                    Console.WriteLine($"Урок {lesson}. Оценка не выставлена");
+                else
+                    Console.WriteLine($"Урок {lesson}. Средняя оценка - {mark}");
             }
-
         }
 
         private static void FindAndWriteInfoAboutClass()
@@ -378,7 +402,7 @@ namespace School
                 Console.WriteLine($"Средняя оценка : {Math.Round(marks.Sum() / marks.Count, 2)}");
             }
         }
-
+        #endregion
         private static void FindAndWriteInfoAboutStudentMarks()
         {
             string className = ClassInput();
@@ -655,6 +679,54 @@ namespace School
             }
         }
         #endregion
+        #region GetRating
+        public void GetClassRating(out List<Class> classes, out List<float> marks)
+        {
+            classes = new List<Class>();
+            marks = new List<float>();
+            if (_classes.Count == 0) return;
+            foreach (Class schClass in _classes)
+            {
+                if (schClass.GetLessons().Count == 0) continue;
+                if (schClass.Students.Count == 0) continue;
+
+                classes.Add(schClass);
+                var averangeMarks = schClass.GetAverageRatingOfClass();
+                float sumMarks = 0;
+                float lessonsCount = 0;
+                foreach (string lesson in averangeMarks.Keys)
+                {
+                    List<float> lessonsMark = averangeMarks[lesson];
+                    if (lessonsMark.Count == 0) continue;
+
+                    lessonsCount++;
+                    sumMarks += lessonsMark.Sum() / lessonsMark.Count();
+                }
+                marks.Add(lessonsCount > 0 ? sumMarks / lessonsCount : 0);
+            }
+
+            //Не бейте за пузырька
+            Class mejClass;
+            float mejMark;
+            for (int i = 0; i < marks.Count; i++)
+            {
+                for (int j = i + 1; j < marks.Count; j++)
+                {
+                    if (marks[i] < marks[j])
+                    {
+                        mejClass = classes[i];
+                        mejMark = marks[i];
+
+                        marks[i] = marks[j];
+                        marks[j] = mejMark;
+                        classes[i] = classes[j];
+                        classes[j] = mejClass;
+                    }
+                }
+            }
+        }
+        #endregion
+
         public List<float> GetMarks(string className, string studentName, string studentSurname, string lessonName)
         {
             Class schClass = FindClass(className);
@@ -671,6 +743,7 @@ namespace School
             }
             return student.LessonsMark[lessonName];
         }
+
         public List<string> GetLessons(string className)
         {
             List<string> lessons = FindClass(className).GetLessons();

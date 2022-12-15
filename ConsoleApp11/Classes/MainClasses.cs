@@ -82,20 +82,24 @@ namespace School.Classes
             if(_lessons.Count == 0) return null;
 
             var marks = new Dictionary<string, float>();
-            foreach(string lesson in _lessons.Keys)
+            foreach (string lesson in _lessons.Keys)
             {
                 float rate = 0;
                 float classCount = 0;
-                
-                for(int classNum = 0; classNum < _lessons.Count; classNum++)
-                { 
+
+                for (int classNum = 0; classNum < _lessons.Count; classNum++)
+                {
                     var classMarks = _lessons[lesson][classNum].GetAverageRatingOfClass(lesson);
                     if (classMarks == null) continue;
 
                     rate += classMarks.Sum() / classMarks.Count();
                     classCount++;
                 }
-                marks.Add(lesson, rate/classCount);
+                float finalMark = rate / classCount;
+                if (classCount == 0)
+                    marks.Add(lesson, finalMark);
+                else
+                    marks.Add(lesson, 0);
             }
             return marks;
         }
