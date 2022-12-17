@@ -96,7 +96,7 @@ namespace School.Classes
                     classCount++;
                 }
                 float finalMark = rate / classCount;
-                if (classCount == 0)
+                if (classCount > 0)
                     marks.Add(lesson, finalMark);
                 else
                     marks.Add(lesson, 0);

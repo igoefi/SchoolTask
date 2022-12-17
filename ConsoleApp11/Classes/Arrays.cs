@@ -187,7 +187,9 @@ namespace ConsoleApp11.Classes
         {
             classes = new List<Class>();
             marks = new List<float>();
+
             if (_classes.Count == 0) return;
+
             foreach (Class schClass in _classes)
             {
                 if (schClass.GetLessons().Count == 0) continue;
@@ -257,6 +259,7 @@ namespace ConsoleApp11.Classes
                     sumMarks += teacherMarks[lesson];
                     sumLessons++;
                 }
+
                 marks.Add(sumLessons > 0 ? sumMarks / sumLessons : 0);
             }
 

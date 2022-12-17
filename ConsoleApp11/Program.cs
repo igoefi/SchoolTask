@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization.Formatters.Binary;
 
 namespace School
@@ -102,13 +103,12 @@ namespace School
             Console.Clear();
             Console.WriteLine("1 - Добавить класс");
             Console.WriteLine("2 - Удалить класс");
-            Console.WriteLine("3 - Добавить предмет у класса(ов)");
-            Console.WriteLine("4 - Удалить предмет у класса(ов)");
-            Console.WriteLine("5 - Вывести список всех классов");
-            Console.WriteLine("6 - Вывести список всех учеников класса");
-            Console.WriteLine("7 - Вывести список всех уроков класса");
-            Console.WriteLine("8 - Вывести информацию о классе");
-            Console.WriteLine("9 - Вывести рейтинг классов по средним оценкам");
+            Console.WriteLine("3 - Выставить оценки по предмету в классе");
+            Console.WriteLine("4 - Вывести список всех классов");
+            Console.WriteLine("5 - Вывести список всех учеников класса");
+            Console.WriteLine("6 - Вывести список всех уроков класса");
+            Console.WriteLine("7 - Вывести информацию о классе");
+            Console.WriteLine("8 - Вывести рейтинг классов по средним оценкам");
             ConsoleKeyInfo key = Console.ReadKey();
             Console.Clear();
             switch (key.KeyChar)
@@ -118,26 +118,23 @@ namespace School
                     break;
                 case '2':
                     AddDeleteClass(false);
-                    break;
+                    break;   
                 case '3':
-                    AddDeleteLesson(true);
+                    SetClassMarks();
                     break;
                 case '4':
-                    AddDeleteLesson(false);
-                    break;
-                case '5':
                     WriteAllClasses();
                     break;
-                case '6':
+                case '5':
                     WriteStudentsOfClass();
                     break;
-                case '7':
+                case '6':
                     WriteLessons();
                     break;
-                case '8':
+                case '7':
                     FindAndWriteInfoAboutClass();
                     break;
-                case '9':
+                case '8':
                     WriteClassRating();
                     break;
                 default:
@@ -267,6 +264,50 @@ namespace School
             }
             SaveFile();
         }
+        private static void SetClassMarks()
+        {
+            Console.Clear();
+            string className = ClassInput();
+            Class schClass = _arrays.FindClass(className);
+            if(schClass == null)
+            {
+                Console.WriteLine("Такого класса не существует");
+            }
+
+            Console.WriteLine("Введите название предмета, по которому ставится оценка");
+            string lessonName = Console.ReadLine();
+
+            //Возможно есть медот лучше, чтобы проверить наличие урока
+            schClass.Students.First().LessonsMark.TryGetValue(lessonName, out List<float> marks);
+
+            if (marks == null)
+            {
+                Console.WriteLine($"Урока {lessonName} в классе {className} нет");
+            }
+
+            Console.WriteLine("Какую четверть необходимо изменить? Если добавить новую, то напишите 0");
+            Console.Write("Четверть - ");
+            int.TryParse(Console.ReadLine(), out int quarter);
+
+            foreach (Student student in schClass.Students)
+            {
+                Console.Clear();
+
+                Console.WriteLine($"Класс {className}, урок {lessonName}" +
+                    (quarter == 0 ? "." : $", {quarter} четверть"));
+
+                Console.WriteLine($"Ученик {student.Surname} {student.Name}");
+                Console.Write("Оценка - ");
+                float.TryParse(Console.ReadLine(), out float mark);
+
+                if (quarter == 0)
+                    _arrays.SetMark(className, student.Name, student.Surname, lessonName, mark);
+                else
+                    _arrays.SetMark(className, student.Name, student.Surname, lessonName, mark, (uint)quarter);
+            }
+
+            SaveFile();
+        }
         #endregion
         #region WriteInformation
         #region WriteRating
@@ -285,7 +326,7 @@ namespace School
             _arrays.GetTeacherRating(out List<Teacher> teachers, out List<float> marks);
             for (int teacherNum = 0; teacherNum < teachers.Count; teacherNum++)
             {
-                Console.WriteLine($"{teacherNum + 1} класс {teachers[teacherNum].Name}." + (marks[teacherNum] > 0 ?
+                Console.WriteLine($"{teacherNum + 1} учитель, {teachers[teacherNum].Surname} {teachers[teacherNum].Name}." + (marks[teacherNum] > 0 ?
                     $" Средняя оценка - {marks[teacherNum]}" : " Оценки не выставлены"));
             }
         }
