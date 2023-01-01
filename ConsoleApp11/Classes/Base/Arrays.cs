@@ -8,20 +8,21 @@ using System.Threading.Tasks;
 namespace ConsoleApp11.Classes
 {
     [Serializable()]
-    internal class Arrays
+    public class Arrays
     {
         public List<Class> _classes = new List<Class>();
         public List<Teacher> _teachers = new List<Teacher>();
 
         #region Add&DeleteSomeone
-        public void AddDeleteClass(string name, bool isAdd)
+        public void AddDeleteClass(string name, bool isAdd, out string exemption)
         {
+            exemption = null;
             if (FindClass(name) != null)
             {
                 if (!isAdd)
                     _classes.Remove(FindClass(name));
                 else
-                    Console.WriteLine("Этот класс уже существует");
+                    exemption = "Этот класс уже существует";
 
                 return;
             }
@@ -29,21 +30,22 @@ namespace ConsoleApp11.Classes
             if (isAdd)
                 _classes.Add(new Class(name));
             else
-                Console.WriteLine("Этого класса не существует");
+                exemption = "Этого класса не существует";
             _classes.Sort();
         }
 
-        public void AddDeleteStudent(string className, string studentName, string studentSurname, bool isAdd)
+        public void AddDeleteStudent(string className, string studentName, string studentSurname, bool isAdd, out string exemption)
         {
+            exemption = null;
             Class schClass = FindClass(className);
             if (schClass == null)
             {
-                Console.WriteLine("Класс не найден");
+                exemption = "Класс не найден";
                 return;
             }
-            if (FindStudent(schClass, studentName, studentSurname) != null && isAdd)
+            if (FindStudent(schClass.Name, studentName, studentSurname) != null && isAdd)
             {
-                Console.WriteLine($"Студент {studentSurname} {studentName} уже находится в этом классе");
+                exemption = $"Студент {studentSurname} {studentName} уже находится в этом классе";
                 return;
             }
 
@@ -58,38 +60,42 @@ namespace ConsoleApp11.Classes
             schClass.Students.Sort();
         }
 
-        public void AddDeleteLesson(string className, string lesson, string nameTeacher, string surnameTeacher, bool isAdd)
+        public void AddDeleteLesson(string className, string lesson, string nameTeacher, string surnameTeacher, bool isAdd, out string exemption)
         {
             Class schClass = FindClass(className);
             Teacher teacher = FindTeacher(nameTeacher, surnameTeacher);
             if (teacher == null)
             {
-                Console.WriteLine($"Учителя {surnameTeacher} {nameTeacher} нет в базе данных");
+                exemption = $"Учителя {surnameTeacher} {nameTeacher} нет в базе данных";
                 return;
             }
             if (schClass == null)
             {
-                Console.WriteLine($"Класса под номером {className} не существует. Вы можете создать его");
+                exemption = $"Класса под номером {className} не существует. Вы можете создать его";
                 return;
             }
 
-            schClass.AddDeleteLesson(lesson, teacher, isAdd);
+            schClass.AddDeleteLesson(lesson, teacher, isAdd, out exemption);
+            if (exemption != null) return;
             if (isAdd)
                 teacher.AddClassOrLesson(lesson, schClass);
             else
                 teacher.DeleteLesson(lesson, schClass);
         }
-        public void AddDeleteLesson(string lesson, string nameTeacher, string surnameTeacher, bool isAdd)
+        public void AddDeleteLesson(string lesson, string nameTeacher, string surnameTeacher, bool isAdd, out string exemption)
         {
+            exemption = null;
             Teacher teacher = FindTeacher(nameTeacher, surnameTeacher);
             if (teacher == null)
             {
-                Console.WriteLine($"Учителя {surnameTeacher} {nameTeacher} нет в базе данных");
+                exemption = $"Учителя {surnameTeacher} {nameTeacher} нет в базе данных";
                 return;
             }
             foreach (Class schClass in _classes)
-                schClass.AddDeleteLesson(lesson, teacher, isAdd);
-
+            {
+                schClass.AddDeleteLesson(lesson, teacher, isAdd, out exemption);
+                if(exemption != null) return;
+            }
             if (isAdd)
             {
                 foreach (Class schClass in _classes)
@@ -101,23 +107,23 @@ namespace ConsoleApp11.Classes
             }
         }
 
-        public void AddDeleteTeacher(string name, string surname, uint mainClassNum, bool isAdd)
+        public void AddDeleteTeacher(string name, string surname, int mainClassNum, bool isAdd, out string exemption)
         {
+            exemption = null;
             Teacher teacher = FindTeacher(name, surname);
             if (teacher != null)
             {
                 if (!isAdd)
                     _teachers.Remove(FindTeacher(name, surname));
                 else
-                    Console.WriteLine("Этот учитель уже записан в базе данных");
-
+                    exemption = "Этот учитель уже записан в базе данных";
                 return;
             }
 
             if (isAdd)
                 _teachers.Add(new Teacher(name, surname, mainClassNum));
             else
-                Console.WriteLine("Этого учителя нет");
+                exemption = "Этого учителя нет";
         }
         #endregion
         #region GetSetSomeone
@@ -286,18 +292,19 @@ namespace ConsoleApp11.Classes
         }
         #endregion
 
-        public List<float> GetMarks(string className, string studentName, string studentSurname, string lessonName)
+        public List<float> GetMarks(string className, string studentName, string studentSurname, string lessonName, out string exemption)
         {
+            exemption = null;
             Class schClass = FindClass(className);
             if (schClass == null)
             {
-                Console.WriteLine($"Класса с номером {className} не существует");
+                exemption = $"Класса с номером {className} не существует";
                 return null;
             }
             Student student = FindStudent(schClass, studentName, studentSurname);
             if (student == null)
             {
-                Console.WriteLine($"Студента {studentSurname} {studentName} не существует");
+                exemption = $"Студента {studentSurname} {studentName} не существует";
                 return null;
             }
             return student.LessonsMark[lessonName];
@@ -325,11 +332,49 @@ namespace ConsoleApp11.Classes
             return null;
         }
 
+        public Student FindStudent(string schClass, string name, string surname)
+        {
+            Class schClassClass = FindClass(schClass);
+            if (schClassClass == null)
+                return null;
+
+            foreach (Student student in schClassClass.Students)
+                if (student.Name.ToLower() == name.ToLower() && student.Surname.ToLower() == surname.ToLower()) return student;
+
+            return null;
+        }
         public Student FindStudent(Class schClass, string name, string surname)
         {
+            if (schClass == null)
+                return null;
+
             foreach (Student student in schClass.Students)
                 if (student.Name.ToLower() == name.ToLower() && student.Surname.ToLower() == surname.ToLower()) return student;
+
             return null;
+        }
+
+        public bool IsReallyLesson(string className, string lesson)
+        {
+            Class schClass = FindClass(className);
+            if (schClass == null) return false;
+
+            foreach(var classLesson in schClass.GetLessons())
+                if(classLesson.ToLower() == lesson.ToLower())
+                    return true;
+
+            return false;
+        }
+
+        public bool IsReallyLesson(string teacherName, string TeacherSurname, string lesson)
+        {
+            Teacher teacher = FindTeacher(teacherName, TeacherSurname);
+            if(teacher == null) return false;
+
+            foreach (var teachLesson in teacher.Lessons.Keys)
+                if (lesson.ToLower() == teachLesson.ToLower())
+                    return true;
+            return false;
         }
         #endregion
     }

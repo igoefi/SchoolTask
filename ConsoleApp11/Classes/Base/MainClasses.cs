@@ -6,7 +6,7 @@ namespace School.Classes
 {
     #region People
     [Serializable()]
-    internal abstract class Human
+    public abstract class Human
     {
         public string Name { get; private set; }
         public string Surname { get; private set; }
@@ -19,7 +19,7 @@ namespace School.Classes
     }
 
     [Serializable()]
-    internal class Student : Human, IComparable<Student>
+    public class Student : Human, IComparable<Student>
     {
         public Dictionary<string, List<float>> LessonsMark { get; private set; } = new Dictionary<string, List<float>>();
         internal Student(string name, string surname) : base(name, surname) { }
@@ -70,26 +70,26 @@ namespace School.Classes
     }
 
     [Serializable()]
-    internal class Teacher : Human
+    public class Teacher : Human
     {
-        private readonly Dictionary<string, List<Class>> _lessons = new Dictionary<string, List<Class>>();
-        public uint MainClassNum { get; private set; }
-        internal Teacher(string name, string surname, uint mainClassNum) : base(name, surname)
+        public Dictionary<string, List<Class>> Lessons { get; } = new Dictionary<string, List<Class>>();
+        public int MainClassNum { get; private set; }
+        internal Teacher(string name, string surname, int mainClassNum) : base(name, surname)
             => MainClassNum = mainClassNum;
 
         public Dictionary<string, float> GetAllMarks()
         {
-            if(_lessons.Count == 0) return null;
+            if(Lessons.Count == 0) return null;
 
             var marks = new Dictionary<string, float>();
-            foreach (string lesson in _lessons.Keys)
+            foreach (string lesson in Lessons.Keys)
             {
                 float rate = 0;
                 float classCount = 0;
 
-                for (int classNum = 0; classNum < _lessons.Count; classNum++)
+                for (int classNum = 0; classNum < Lessons.Count; classNum++)
                 {
-                    var classMarks = _lessons[lesson][classNum].GetAverageRatingOfClass(lesson);
+                    var classMarks = Lessons[lesson][classNum].GetAverageRatingOfClass(lesson);
                     if (classMarks == null) continue;
 
                     rate += classMarks.Sum() / classMarks.Count();
@@ -107,29 +107,29 @@ namespace School.Classes
 
         public void AddClassOrLesson(string lesson, Class lessonClass)
         {
-            _lessons.TryGetValue(lesson, out List<Class> list);
+            Lessons.TryGetValue(lesson, out List<Class> list);
             if (list == null)
-                _lessons.Add(lesson, new List<Class>());
+                Lessons.Add(lesson, new List<Class>());
 
             if (lessonClass != null)
-                _lessons[lesson].Add(lessonClass);
+                Lessons[lesson].Add(lessonClass);
         }
         public void DeleteLesson(string lesson, Class schClass)
         {
-            _lessons.TryGetValue(lesson, out List<Class> list);
+            Lessons.TryGetValue(lesson, out List<Class> list);
             list?.Remove(schClass);
         }
         public void DeleteLesson(string lesson)
         {
-            _lessons.TryGetValue(lesson, out List<Class> list);
+            Lessons.TryGetValue(lesson, out List<Class> list);
             if (list != null)
-                _lessons.Remove(lesson);
+                Lessons.Remove(lesson);
         }
     }
     #endregion
 
     [Serializable()]
-    internal class Class : IComparable<Class>
+    public class Class : IComparable<Class>
     {
         public string Name { get; private set; }
 
@@ -164,14 +164,15 @@ namespace School.Classes
         }
         public void DeleteStudent(Student student) => Students.Remove(student);
 
-        public void AddDeleteLesson(string nameLesson, Teacher teacher, bool isAdd)
+        public void AddDeleteLesson(string nameLesson, Teacher teacher, bool isAdd, out string exemption)
         {
+            exemption = null;
             _lessonsTeachers.TryGetValue(nameLesson, out Teacher checkTeacher);
             if (checkTeacher == null)
             {
                 if (!isAdd)
                 {
-                    Console.WriteLine($"Урок {nameLesson} не ведётся в классе {Name}");
+                    exemption = $"Урок {nameLesson} не ведётся в классе {Name}";
                     return;
                 }
 
@@ -185,14 +186,16 @@ namespace School.Classes
             {
                 if (isAdd)
                 {
-                    Console.WriteLine($"Учитель по предмету {nameLesson} сменён с учителя {checkTeacher.Surname} {checkTeacher.Name} на учителя {teacher.Surname} {teacher.Name}");
+                    exemption = $"Учитель по предмету {nameLesson} сменён с учителя {checkTeacher.Surname} " +
+                        $"{checkTeacher.Name} на учителя {teacher.Surname} {teacher.Name}";
+
                     _lessonsTeachers[nameLesson] = teacher;
                     return;
                 }
                 if (checkTeacher != teacher)
                 {
-                    Console.WriteLine($"Урок {nameLesson} в классе {Name} ведёт {checkTeacher.Surname} {checkTeacher.Name}, а не {teacher.Surname} {teacher.Name}");
-                    Console.WriteLine("По этой причине операция отменена");
+                    exemption = $"Урок {nameLesson} в классе {Name} ведёт {checkTeacher.Surname} " +
+                        $"{checkTeacher.Name}, а не {teacher.Surname} {teacher.Name}";
                     return;
                 }
 
