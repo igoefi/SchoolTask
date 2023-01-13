@@ -28,9 +28,9 @@ namespace ConsoleApp11.Classes.Abstraction
         }
 
         #region Serialization
-        public Arrays ReadFile(out Stream stream, string fileName)
+        public Arrays ReadFile(string fileName)
         {
-            return serialization.ReadFile(out stream, fileName);
+            return serialization.ReadFile(fileName);
         }
 
         public void SaveFile(Arrays arrays, string fileName) =>

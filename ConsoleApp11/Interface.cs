@@ -26,10 +26,7 @@ namespace School
         {
             Arrays = new Arrays();
             if (File.Exists(FileName))
-            {
-                Arrays = controllers.ReadFile(out Stream stream, FileName);
-                stream.Close();
-            }
+                Arrays = controllers.ReadFile(FileName);
 
             controllers = new ControllerAbstraction(new SerializationController(), new SetController(),
                 new AddDeleteController(), new WriteInformationController());

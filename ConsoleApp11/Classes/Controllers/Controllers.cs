@@ -13,10 +13,11 @@ namespace ConsoleApp11.Classes.Controllers
 {
     public class SerializationController
     {
-        public Arrays ReadFile(out Stream stream, string fileName)
+        public Arrays ReadFile(string fileName)
         {
-            stream = File.OpenRead(fileName);
+            Stream stream = File.OpenRead(fileName);
             BinaryFormatter deserializer = new BinaryFormatter();
+            stream.Close();
             return (Arrays)deserializer.Deserialize(stream);
         }
 
